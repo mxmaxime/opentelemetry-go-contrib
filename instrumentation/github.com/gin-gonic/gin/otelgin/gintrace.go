@@ -63,6 +63,11 @@ func Middleware(service string, opts ...Option) gin.HandlerFunc {
 		c.Set(tracerKey, tracer)
 		savedCtx := c.Request.Context()
 		defer func() {
+			// Check if the context was canceled
+			if savedCtx.Err() != nil {
+				// If the original context was canceled, abort the request
+				return
+			}
 			c.Request = c.Request.WithContext(savedCtx)
 		}()
 		ctx := cfg.Propagators.Extract(savedCtx, propagation.HeaderCarrier(c.Request.Header))
